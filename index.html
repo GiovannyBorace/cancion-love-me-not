@@ -373,63 +373,75 @@ const CONFIG = {
     lrcData: [
         { time: 0.0,   text: "♪" },
 
-        // ——— VERSO 1 ——— (3.5s por línea → coro exacto en 58s)
-        { time: 23.0,  text: "See, right now, I need you" },
-        { time: 26.5,  text: "I'll meet you somewhere now" },
-        { time: 30.0,  text: "You up now, I see you" },
-        { time: 33.5,  text: "I get you, take care now" },
-        { time: 37.0,  text: "Slow down, be cool" },
-        { time: 40.5,  text: "I miss you, come here now" },
-        { time: 44.0,  text: "It's yours now, keep it" },
-        { time: 47.5,  text: "I'll hold out until now" },
-        { time: 51.0,  text: "I need you right now" },
-        { time: 54.5,  text: "Once I leave you I'm strung out" },
+        // ——— VERSO 1 ——— (23s→58s en 9 pasos = 3.9s c/u)
+        { time: 23.0,  text: "See, right now, I need you, I'll meet you somewhere now" },
+        { time: 26.9,  text: "You up now, I see you, I get you, take care now" },
+        { time: 30.8,  text: "Slow down, be cool, I miss you, come here now" },
+        { time: 34.6,  text: "It's yours now, keep it, I'll hold out until now" },
+        { time: 38.5,  text: "I need you right now, once I leave you I'm strung out" },
+        { time: 42.3,  text: "If I get you, I'm slowly breaking down" },
+
+        // ——— PRE-CORO ———
+        { time: 46.2,  text: "And, oh, it's hard to see you, but I wish you were right here" },
+        { time: 50.1,  text: "Oh, it's hard to leave you when I get you everywhere" },
+        { time: 54.0,  text: "All this time I'm thinking we could never be a pair" },
 
         // ——— CORO 1 ——— (ancla confirmada: 0:58)
-        { time: 58.0,  text: "Oh no, I don't need you" },
-        { time: 61.5,  text: "But I miss you, come here" },
-        { time: 65.0,  text: "Oh no, I don't need you" },
-        { time: 68.5,  text: "But I miss you, come here" },
+        { time: 58.0,  text: "Oh, no, I don't need you, but I miss you, come here" },
+        { time: 62.0,  text: "And, oh, it's hard to see you, but I wish you were right here" },
+        { time: 66.0,  text: "Oh, it's hard to leave you when I get you everywhere" },
+        { time: 70.0,  text: "All this time, I'm thinking I'm strong enough to sink it" },
+        { time: 74.0,  text: "Oh, no, I don't need you, but I miss you, come here" },
 
-        // ——— POST-CORO ———
-        { time: 72.0,  text: "He loves me not, he loves me" },
-        { time: 75.5,  text: "He holds me tight then lets me go" },
-        { time: 79.0,  text: "He loves me not, he loves me" },
-        { time: 82.5,  text: "He holds me tight then lets me go" },
+        // ——— HOOK 1 ———
+        { time: 80.0,  text: "He love me not, he loves me" },
+        { time: 86.0,  text: "He holds me tight then lets me go" },
+        { time: 92.0,  text: "He love me not, he loves me" },
+        { time: 98.0,  text: "He holds me tight then lets me go" },
 
         // ——— VERSO 2 ———
-        { time: 86.0,  text: "Soon as you leave me" },
-        { time: 89.5,  text: "We always lose connection" },
-        { time: 93.0,  text: "It's gettin' messy" },
-        { time: 96.5,  text: "I fiend for your affection" },
-        { time: 100.0, text: "Don't loosen your grip" },
-        { time: 103.5, text: "Got a hold on me" },
-        { time: 107.0, text: "Now, forever" },
-        { time: 110.5, text: "Let's get back together" },
-
-        // ——— CORO 2 ———
-        { time: 114.0, text: "Oh no, I don't need you" },
-        { time: 117.5, text: "But I miss you, come here" },
-        { time: 121.0, text: "Oh no, I don't need you" },
-        { time: 124.5, text: "But I miss you, come here" },
-
-        // ——— POST-CORO 2 ———
-        { time: 128.0, text: "He loves me not, he loves me" },
-        { time: 131.5, text: "He holds me tight then lets me go" },
-        { time: 135.0, text: "He loves me not, he loves me" },
-        { time: 138.5, text: "He holds me tight then lets me go" },
+        { time: 104.0, text: "Soon as you leave me, we always lose connection" },
+        { time: 109.0, text: "It's gettin' messy, I fiend for your affection" },
+        { time: 114.0, text: "Don't loosen your grip, got a hold on me" },
+        { time: 119.0, text: "Now, forever, let's get back together" },
 
         // ——— PUENTE ———
-        { time: 142.0, text: "Oh no, I don't need you" },
-        { time: 145.5, text: "But I miss you, come here" },
-        { time: 149.0, text: "He loves me not, he loves me" },
-        { time: 152.5, text: "He holds me tight then lets me go" },
+        { time: 125.0, text: "Lord, take it so far away" },
+        { time: 130.5, text: "I pray that, God, we don't break" },
+        { time: 136.0, text: "I want you to take me up and down" },
+        { time: 141.5, text: "And 'round and 'round again" },
 
-        // ——— OUTRO ———
-        { time: 156.0, text: "He loves me not, he loves me" },
-        { time: 159.5, text: "He holds me tight then lets me go" },
-        { time: 163.0, text: "He loves me not, he loves me" },
-        { time: 166.5, text: "He holds me tight then lets me go" },
+        // ——— CORO 2 ———
+        { time: 147.0, text: "And, oh, it's hard to see you, but I wish you were right here" },
+        { time: 151.5, text: "Oh, it's hard to leave you when I get you everywhere" },
+        { time: 156.0, text: "All this time I'm thinking we could never be a pair" },
+        { time: 160.5, text: "Oh, no, I don't need you, but I miss you, come here" },
+        { time: 165.0, text: "And, oh, it's hard to see you but I wish you were right here" },
+        { time: 169.5, text: "Oh, it's hard to leave you when I get you everywhere" },
+        { time: 174.0, text: "All this time, I'm thinking I'm strong enough to sink it" },
+        { time: 178.5, text: "Oh, no, I don't need you, but I miss you, come here" },
+
+        // ——— HOOK 2 ———
+        { time: 185.0, text: "He love me not, he loves me" },
+        { time: 191.5, text: "He holds me tight then lets me go" },
+        { time: 198.0, text: "He love me not, he loves me" },
+        { time: 204.5, text: "He holds me tight then lets me go" },
+        { time: 211.0, text: "He love me not, he loves me" },
+        { time: 217.5, text: "He holds me tight then lets me go" },
+        { time: 224.0, text: "He love me not, he loves me" },
+        { time: 230.5, text: "He holds me tight then lets me go" },
+
+        // ——— OUTRO VERSO ———
+        { time: 237.0, text: "You gotta say that you're sorry at the end of the night" },
+        { time: 243.0, text: "Wake up in the morning, everything's alright" },
+        { time: 249.0, text: "At the end of the story, you're holdin' me tight" },
+        { time: 255.0, text: "I don't need to worry, am I out of my mind?" },
+
+        // ——— CORO FINAL ———
+        { time: 262.0, text: "And, oh, it's hard to see you, but I wish you were right here" },
+        { time: 269.0, text: "Oh, it's hard to leave you when I get you everywhere" },
+        { time: 276.0, text: "All this time I'm thinking, I'm strong enough to sink it" },
+        { time: 283.0, text: "Oh, no, I don't need you, but I miss you, come here" },
     ]
 };
 
