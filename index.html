@@ -276,16 +276,51 @@
         /* Tiempo */
         #time-disp {
             position: fixed;
-            bottom: 0.55rem;
+            bottom: 0.6rem;
             right: 1.4rem;
-            z-index: 6;
-            font-size: 0.72rem;
-            color: rgba(255,255,255,0.28);
-            letter-spacing: 0.06em;
+            z-index: 7;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 0.08em;
             opacity: 0;
             transition: opacity 1s ease;
+            background: rgba(0,0,0,0.55);
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            border: 1px solid rgba(0,240,255,0.3);
+            text-shadow: 0 0 8px rgba(0,240,255,0.6);
         }
         #time-disp.visible { opacity: 1; }
+
+        /* Botón play/pause */
+        #play-pause-btn {
+            position: fixed;
+            bottom: 0.4rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 7;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid rgba(0,240,255,0.6);
+            background: rgba(0,0,0,0.55);
+            color: var(--cyan);
+            font-size: 1rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 14px rgba(0,240,255,0.2);
+        }
+        #play-pause-btn:hover {
+            background: rgba(0,240,255,0.15);
+            box-shadow: 0 0 24px rgba(0,240,255,0.4);
+            transform: translateX(-50%) scale(1.1);
+        }
+        #play-pause-btn.visible { display: flex; }
 
         /* ── PARTÍCULAS ── */
         .particle {
@@ -356,6 +391,7 @@
     <div id="prog-fill"></div>
 </div>
 <div id="time-disp" aria-hidden="true"></div>
+<button id="play-pause-btn" aria-label="Pausar / Reanudar">⏸</button>
 
 <!-- AUDIO (oculto) -->
 <audio id="audio-el" crossorigin="anonymous" preload="auto"></audio>
@@ -453,8 +489,9 @@ let started      = false;
 let lyricOffset  = 0;    // segundos de ajuste manual (+ = adelanta letra, - = atrasa)
 const reduced    = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PARTICLE_COLORS = ['#00f0ff', '#a855f7', '#ff006e', '#38bdf8'];
-const calibPanel = document.getElementById('calib');
-const offsetDisp = document.getElementById('offset-val');
+const calibPanel  = document.getElementById('calib');
+const offsetDisp  = document.getElementById('offset-val');
+const ppBtn       = document.getElementById('play-pause-btn');
 
 // ================================================================
 // INICIALIZAR LÍNEAS DE LETRA
@@ -617,6 +654,7 @@ async function start() {
         document.getElementById('vis-canvas').style.opacity = '1';
         songInfo.classList.add('visible');
         timeDisp.classList.add('visible');
+        ppBtn.classList.add('visible');
         resizeCanvas();
         drawVis();
         spawnParticles();
@@ -632,6 +670,22 @@ async function start() {
 // EVENT LISTENERS
 // ================================================================
 startBtn.addEventListener('click', start);
+
+// Botón play/pause
+ppBtn.addEventListener('click', () => {
+    if (audio.paused) {
+        audio.play();
+        ppBtn.textContent = '⏸';
+        ppBtn.setAttribute('aria-label', 'Pausar');
+    } else {
+        audio.pause();
+        ppBtn.textContent = '▶';
+        ppBtn.setAttribute('aria-label', 'Reanudar');
+    }
+});
+
+audio.addEventListener('play',  () => { ppBtn.textContent = '⏸'; });
+audio.addEventListener('pause', () => { ppBtn.textContent = '▶'; });
 
 // Controles de teclado
 document.addEventListener('keydown', (e) => {
