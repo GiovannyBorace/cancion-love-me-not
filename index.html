@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Me Not — Ravyn Lenae</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan:   #00f0ff;
+            --purple: #a855f7;
+            --pink:   #ff006e;
+            --bg:     #07070f;
+            --dim:    rgba(255,255,255,0.18);
+            --bright: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--bright);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ── CAPA 1: VIDEO FONDO ── */
+        #bg-video {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            opacity: 0.75;
+            filter: blur(1px) saturate(0.85) brightness(0.88);
+        }
+
+        /* Gradiente que oscurece bordes y base */
+        #vignette {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            background:
+                linear-gradient(to bottom,
+                    rgba(7,7,15,0.35) 0%,
+                    transparent 22%,
+                    transparent 62%,
+                    rgba(7,7,15,0.75) 100%);
+            pointer-events: none;
+        }
+
+        /* ── CAPA 2: VISUALIZER ── */
+        #vis-canvas {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 1.2s ease 0.4s;
+        }
+        @media (max-width: 768px) { #vis-canvas { height: 22%; } }
+
+        /* ── INFO DE CANCIÓN (arriba izquierda) ── */
+        #song-info {
+            position: fixed;
+            top: 1.8rem;
+            left: 2rem;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        #song-info.visible { opacity: 1; }
+        .s-title  { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; }
+        .s-artist { font-size: 0.78rem; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+
+        /* ── CAPA 3: LETRAS ── */
+        #lyrics-stage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            /* deja espacio al visualizer */
+            height: 70vh;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        #lyrics-inner {
+            position: relative;
+            width: 88%;
+            max-width: 800px;
+            height: 340px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lyric-line {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: clamp(1rem, 2.6vw, 1.85rem);
+            font-weight: 600;
+            letter-spacing: 0.025em;
+            line-height: 1.45;
+            color: var(--dim);
+            transition: all 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform, opacity;
+            user-select: none;
+            padding: 0 1rem;
+        }
+
+        /* Posición 0 = activa, centrada */
+        .lyric-line.p0 {
+            transform: translateY(0) scale(1.06);
+            color: #ffffff;
+            opacity: 1;
+            font-size: clamp(1.4rem, 3.6vw, 2.5rem);
+            font-weight: 700;
+            background: rgba(0,0,0,0.45);
+            border-radius: 10px;
+            padding: 0.35em 1em;
+            text-shadow:
+                0 2px 8px rgba(0,0,0,0.9),
+                0 0 30px rgba(0,240,255,0.7),
+                0 0 80px rgba(0,240,255,0.3);
+        }
+        /* Líneas adyacentes */
+        .lyric-line.pm1 {
+            transform: translateY(-82px) scale(0.87);
+            opacity: 0.55;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.95);
+            color: rgba(255,255,255,0.85);
+        }
+        .lyric-line.pp1 {
+            transform: translateY(82px) scale(0.87);
+            opacity: 0.55;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.95);
+            color: rgba(255,255,255,0.85);
+        }
+        .lyric-line.pm2 { transform: translateY(-148px) scale(0.73); opacity: 0.18; text-shadow: 0 1px 4px rgba(0,0,0,1); }
+        .lyric-line.pp2 { transform: translateY( 148px) scale(0.73); opacity: 0.18; text-shadow: 0 1px 4px rgba(0,0,0,1); }
+        /* Ocultas */
+        .lyric-line.pup   { transform: translateY(-220px) scale(0.6); opacity: 0; }
+        .lyric-line.pdown { transform: translateY( 220px) scale(0.6); opacity: 0; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .lyric-line { transition: opacity 0.2s linear; }
+            .lyric-line.p0 { text-shadow: 0 2px 6px rgba(0,0,0,0.9); }
+        }
+
+        /* ── CAPA 4: OVERLAY INICIAL ── */
+        #play-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            background: rgba(7,7,15,0.97);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            transition: opacity 0.9s ease, visibility 0.9s ease;
+        }
+        #play-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .ov-song { text-align: center; }
+        .ov-song h1 {
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            background: linear-gradient(130deg, var(--cyan) 0%, var(--purple) 60%, var(--pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .ov-song p {
+            margin-top: 0.5rem;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .play-btn {
+            width: 108px;
+            height: 108px;
+            border-radius: 50%;
+            border: 2px solid var(--cyan);
+            background: rgba(0,240,255,0.07);
+            color: var(--cyan);
+            font-size: 2.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 32px rgba(0,240,255,0.15), inset 0 0 32px rgba(0,240,255,0.07);
+        }
+        .play-btn:hover  { transform: scale(1.09); box-shadow: 0 0 55px rgba(0,240,255,0.35), inset 0 0 40px rgba(0,240,255,0.15); }
+        .play-btn:active { transform: scale(0.96); }
+        .play-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 5px; }
+
+        .ov-hint { font-size: 0.78rem; color: rgba(255,255,255,0.28); letter-spacing: 0.06em; }
+
+        /* ── ALERTA DE AUDIO ── */
+        #audio-err {
+            position: fixed;
+            bottom: 5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            background: rgba(255,50,50,0.12);
+            border: 1px solid rgba(255,80,80,0.4);
+            color: #ff7070;
+            padding: 0.8rem 1.6rem;
+            border-radius: 10px;
+            font-size: 0.84rem;
+            display: none;
+            text-align: center;
+            max-width: 90%;
+            line-height: 1.5;
+        }
+
+        /* ── PANEL DE CALIBRACIÓN ── */
+        #calib {
+            position: fixed;
+            top: 1.8rem;
+            right: 1.8rem;
+            z-index: 8;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(0,240,255,0.25);
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.7;
+            display: none;
+            text-align: center;
+            backdrop-filter: blur(8px);
+        }
+        #calib.visible { display: block; }
+        #offset-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        /* ── PROGRESS BAR ── */
+        #prog-wrap {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.04);
+            z-index: 6;
+        }
+        #prog-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--cyan), var(--purple), var(--pink));
+            box-shadow: 0 0 10px var(--cyan);
+            transition: width 0.15s linear;
+        }
+
+        /* Tiempo */
+        #time-disp {
+            position: fixed;
+            bottom: 0.55rem;
+            right: 1.4rem;
+            z-index: 6;
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.28);
+            letter-spacing: 0.06em;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        #time-disp.visible { opacity: 1; }
+
+        /* ── PARTÍCULAS ── */
+        .particle {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            animation: rise linear infinite;
+        }
+        @keyframes rise {
+            0%   { transform: translateY(100vh); opacity: 0; }
+            6%   { opacity: 0.65; }
+            92%  { opacity: 0.35; }
+            100% { transform: translateY(-8vh) translateX(15px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- CAPA 1: VIDEO FONDO (local) -->
+<video id="bg-video" autoplay loop muted playsinline>
+    <source src="bg-video.mp4" type="video/mp4">
+</video>
+<div id="vignette"></div>
+
+<!-- CAPA 2: VISUALIZER -->
+<canvas id="vis-canvas" aria-hidden="true"></canvas>
+
+<!-- INFO CANCIÓN -->
+<div id="song-info">
+    <div class="s-title">Love Me Not</div>
+    <div class="s-artist">Ravyn Lenae</div>
+</div>
+
+<!-- CAPA 3: LETRAS -->
+<div id="lyrics-stage" aria-live="polite" aria-label="Letra sincronizada">
+    <div id="lyrics-inner"></div>
+</div>
+
+<!-- CAPA 4: OVERLAY -->
+<div id="play-overlay">
+    <div class="ov-song">
+        <h1>Love Me Not</h1>
+        <p>Ravyn Lenae · Bird's Eye · 2024</p>
+    </div>
+    <button class="play-btn" id="start-btn" aria-label="Reproducir Love Me Not">▶</button>
+    <span class="ov-hint">Clic aquí o presiona Espacio para iniciar</span>
+</div>
+
+<!-- ERROR SI FALTA EL MP3 -->
+<div id="audio-err">
+    ⚠ No se encontró <strong>love-me-not.mp3</strong><br>
+    Coloca el archivo MP3 en esta misma carpeta e intenta de nuevo.
+</div>
+
+<!-- PANEL DE CALIBRACIÓN (arriba derecha) -->
+<div id="calib">
+    <div>Ajuste de letra</div>
+    <div id="offset-val">0.0 s</div>
+    <div style="opacity:0.5;font-size:0.68rem">← atrasada &nbsp;|&nbsp; adelantada →<br>C = guardar offset</div>
+</div>
+
+<!-- PROGRESS -->
+<div id="prog-wrap" role="progressbar" aria-label="Progreso de la canción">
+    <div id="prog-fill"></div>
+</div>
+<div id="time-disp" aria-hidden="true"></div>
+
+<!-- AUDIO (oculto) -->
+<audio id="audio-el" crossorigin="anonymous" preload="auto"></audio>
+
+<script>
+// ================================================================
+// CONFIGURACIÓN CENTRAL
+// ================================================================
+const CONFIG = {
+    // MP3 de la versión screwed (4:56 = 296s) — ya en esta carpeta
+    audioSrc: 'love-me-not.mp3',
+
+    // Letra sincronizada — Ravyn Lenae "Love Me Not" (screwed ×1.3897)
+    // Tiempos originales × (296/213) para coincidir con la versión ralentizada
+    lrcData: [
+        { time: 0.0,   text: "♪" },
+
+        // ——— VERSO 1 ———
+        { time: 23.0,  text: "See, right now, I need you" },
+        { time: 29.2,  text: "I'll meet you somewhere now" },
+        { time: 35.5,  text: "You up now, I see you" },
+        { time: 41.3,  text: "I get you, take care now" },
+        { time: 46.9,  text: "Slow down, be cool" },
+        { time: 52.2,  text: "I miss you, come here now" },
+        { time: 57.7,  text: "It's yours now, keep it" },
+        { time: 63.0,  text: "I'll hold out until now" },
+        { time: 68.6,  text: "I need you right now" },
+        { time: 74.2,  text: "Once I leave you I'm strung out" },
+
+        // ——— CORO 1 ———
+        { time: 82.1,  text: "Oh no, I don't need you" },
+        { time: 88.6,  text: "But I miss you, come here" },
+        { time: 95.3,  text: "Oh no, I don't need you" },
+        { time: 101.9, text: "But I miss you, come here" },
+
+        // ——— POST-CORO ———
+        { time: 109.2, text: "He loves me not, he loves me" },
+        { time: 116.8, text: "He holds me tight then lets me go" },
+        { time: 123.8, text: "He loves me not, he loves me" },
+        { time: 130.7, text: "He holds me tight then lets me go" },
+
+        // ——— VERSO 2 ———
+        { time: 139.1, text: "Soon as you leave me" },
+        { time: 145.1, text: "We always lose connection" },
+        { time: 151.1, text: "It's gettin' messy" },
+        { time: 157.1, text: "I fiend for your affection" },
+        { time: 163.4, text: "Don't loosen your grip" },
+        { time: 169.6, text: "Got a hold on me" },
+        { time: 175.2, text: "Now, forever" },
+        { time: 180.8, text: "Let's get back together" },
+
+        // ——— CORO 2 ———
+        { time: 188.4, text: "Oh no, I don't need you" },
+        { time: 195.0, text: "But I miss you, come here" },
+        { time: 201.6, text: "Oh no, I don't need you" },
+        { time: 208.1, text: "But I miss you, come here" },
+
+        // ——— POST-CORO 2 ———
+        { time: 215.5, text: "He loves me not, he loves me" },
+        { time: 223.2, text: "He holds me tight then lets me go" },
+        { time: 230.1, text: "He loves me not, he loves me" },
+        { time: 237.1, text: "He holds me tight then lets me go" },
+
+        // ——— PUENTE ———
+        { time: 244.6, text: "Oh no, I don't need you" },
+        { time: 251.1, text: "But I miss you, come here" },
+        { time: 258.1, text: "He loves me not, he loves me" },
+        { time: 265.1, text: "He holds me tight then lets me go" },
+
+        // ——— OUTRO ———
+        { time: 273.1, text: "He loves me not, he loves me" },
+        { time: 281.1, text: "He holds me tight then lets me go" },
+        { time: 288.6, text: "He loves me not, he loves me" },
+        { time: 294.0, text: "He holds me tight then lets me go" },
+    ]
+};
+
+// ================================================================
+// DOM
+// ================================================================
+const audio    = document.getElementById('audio-el');
+const canvas   = document.getElementById('vis-canvas');
+const ctx2d    = canvas.getContext('2d');
+const inner    = document.getElementById('lyrics-inner');
+const overlay  = document.getElementById('play-overlay');
+const startBtn = document.getElementById('start-btn');
+const progFill = document.getElementById('prog-fill');
+const timeDisp = document.getElementById('time-disp');
+const songInfo = document.getElementById('song-info');
+const errBox   = document.getElementById('audio-err');
+
+// ================================================================
+// ESTADO
+// ================================================================
+let audioCtx     = null;
+let analyser     = null;
+let freqData     = null;
+let animId       = null;
+let activeIdx    = -1;
+let started      = false;
+let lyricOffset  = 0;    // segundos de ajuste manual (+ = adelanta letra, - = atrasa)
+const reduced    = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PARTICLE_COLORS = ['#00f0ff', '#a855f7', '#ff006e', '#38bdf8'];
+const calibPanel = document.getElementById('calib');
+const offsetDisp = document.getElementById('offset-val');
+
+// ================================================================
+// INICIALIZAR LÍNEAS DE LETRA
+// ================================================================
+function initLyrics() {
+    CONFIG.lrcData.forEach((line, i) => {
+        const el = document.createElement('div');
+        el.className   = 'lyric-line pdown';
+        el.textContent = line.text;
+        el.dataset.i   = i;
+        inner.appendChild(el);
+    });
+}
+
+// ================================================================
+// POSICIONAR LETRAS SEGÚN ÍNDICE ACTIVO
+// ================================================================
+const POS_CLASS = ['pup', 'pm2', 'pm1', 'p0', 'pp1', 'pp2', 'pdown'];
+
+function updateLyrics(t) {
+    let next = -1;
+    for (let i = 0; i < CONFIG.lrcData.length; i++) {
+        if (t >= CONFIG.lrcData[i].time) next = i;
+    }
+    if (next === activeIdx) return;
+    activeIdx = next;
+
+    inner.querySelectorAll('.lyric-line').forEach((el, i) => {
+        const diff = i - activeIdx;
+        el.className = 'lyric-line ' + (
+            diff <= -3 ? 'pup'   :
+            diff === -2 ? 'pm2'  :
+            diff === -1 ? 'pm1'  :
+            diff === 0  ? 'p0'   :
+            diff === 1  ? 'pp1'  :
+            diff === 2  ? 'pp2'  :
+                          'pdown'
+        );
+    });
+}
+
+// ================================================================
+// WEB AUDIO API
+// ================================================================
+function initAudioCtx() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = window.innerWidth < 768 ? 128 : 256;
+    analyser.smoothingTimeConstant = 0.84;
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    const src = audioCtx.createMediaElementSource(audio);
+    src.connect(analyser);
+    analyser.connect(audioCtx.destination);
+}
+
+function resizeCanvas() {
+    const mob = window.innerWidth < 768;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight * (mob ? 0.22 : 0.30);
+}
+
+function drawVis() {
+    animId = requestAnimationFrame(drawVis);
+    analyser.getByteFrequencyData(freqData);
+
+    const W = canvas.width, H = canvas.height;
+    const barW = (W / freqData.length) * 2.5;
+    let x = 0;
+
+    ctx2d.clearRect(0, 0, W, H);
+
+    // Barras de frecuencia con gradiente HSL
+    for (let i = 0; i < freqData.length; i++) {
+        const v   = freqData[i];
+        const h   = 185 + (i / freqData.length) * 155;
+        const s   = 72 + (v / 255) * 28;
+        const bH  = (v / 255) * H * 0.85;
+        const g   = ctx2d.createLinearGradient(0, H, 0, H - bH);
+        g.addColorStop(0,   `hsla(${h},${s}%,40%,0.07)`);
+        g.addColorStop(0.5, `hsla(${h},${s}%,55%,0.52)`);
+        g.addColorStop(1,   `hsla(${h},${s}%,68%,0.92)`);
+        ctx2d.fillStyle = g;
+        rRect(x, H - bH, Math.max(barW - 2, 1), bH, 3);
+        ctx2d.fill();
+        if (!reduced && v > 198) {
+            ctx2d.shadowColor = `hsla(${h},100%,68%,1)`;
+            ctx2d.shadowBlur  = 20;
+            ctx2d.fill();
+            ctx2d.shadowBlur  = 0;
+        }
+        x += barW;
+    }
+
+    // Onda de dominio de tiempo
+    analyser.getByteTimeDomainData(freqData);
+    ctx2d.beginPath();
+    ctx2d.lineWidth   = 1.5;
+    ctx2d.strokeStyle = 'rgba(0,240,255,0.22)';
+    const sl = W / freqData.length;
+    x = 0;
+    for (let i = 0; i < freqData.length; i++) {
+        const y = ((freqData[i] / 128) * H) / 2 + H / 2;
+        i === 0 ? ctx2d.moveTo(x, y) : ctx2d.lineTo(x, y);
+        x += sl;
+    }
+    ctx2d.stroke();
+}
+
+function rRect(x, y, w, h, r) {
+    ctx2d.beginPath();
+    ctx2d.moveTo(x + r, y);
+    ctx2d.lineTo(x + w - r, y);
+    ctx2d.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx2d.lineTo(x + w, y + h);
+    ctx2d.lineTo(x, y + h);
+    ctx2d.lineTo(x, y + r);
+    ctx2d.quadraticCurveTo(x, y, x + r, y);
+    ctx2d.closePath();
+}
+
+// ================================================================
+// PARTÍCULAS AMBIENTALES
+// ================================================================
+function spawnParticles() {
+    if (reduced) return;
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = (Math.random() * 100) + 'vw';
+            p.style.background = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
+            p.style.animationDelay    = (Math.random() * 5) + 's';
+            p.style.animationDuration = (8 + Math.random() * 12) + 's';
+            document.body.appendChild(p);
+        }, i * 320);
+    }
+}
+
+// ================================================================
+// FORMATO mm:ss
+// ================================================================
+function fmt(s) {
+    const m = Math.floor(s / 60);
+    return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+}
+
+// ================================================================
+// INICIO DE LA EXPERIENCIA
+// ================================================================
+async function start() {
+    if (started) return;
+    started = true;
+    initAudioCtx();
+    audio.src = CONFIG.audioSrc;
+
+    overlay.classList.add('hidden');
+
+    try {
+        await audio.play();
+        document.getElementById('vis-canvas').style.opacity = '1';
+        songInfo.classList.add('visible');
+        timeDisp.classList.add('visible');
+        resizeCanvas();
+        drawVis();
+        spawnParticles();
+    } catch (err) {
+        errBox.style.display = 'block';
+        overlay.classList.remove('hidden');
+        started = false;
+        console.error('Error de reproducción:', err);
+    }
+}
+
+// ================================================================
+// EVENT LISTENERS
+// ================================================================
+startBtn.addEventListener('click', start);
+
+// Controles de teclado
+document.addEventListener('keydown', (e) => {
+    // Espacio = play/pause
+    if (e.code === 'Space') {
+        e.preventDefault();
+        if (!audioCtx) { start(); return; }
+        audio.paused ? audio.play() : audio.pause();
+        return;
+    }
+    if (!started) return;
+
+    // Flechas = ajuste de letra (±0.5 s por pulsación, ±5 s con Shift)
+    const step = e.shiftKey ? 5 : 0.5;
+    if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        lyricOffset = Math.round((lyricOffset + step) * 10) / 10;
+    } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        lyricOffset = Math.round((lyricOffset - step) * 10) / 10;
+    } else if (e.code === 'KeyC') {
+        // C = copiar offset al portapapeles para que me lo envíes
+        navigator.clipboard?.writeText(String(lyricOffset));
+        offsetDisp.textContent = lyricOffset.toFixed(1) + ' s ✓ copiado';
+        setTimeout(() => { offsetDisp.textContent = lyricOffset.toFixed(1) + ' s'; }, 1500);
+        return;
+    } else { return; }
+
+    offsetDisp.textContent = lyricOffset.toFixed(1) + ' s';
+    calibPanel.classList.add('visible');
+});
+
+// Actualización de letra + barra de progreso
+audio.addEventListener('timeupdate', () => {
+    const t  = audio.currentTime;
+    const d  = audio.duration || 296;
+    updateLyrics(t + lyricOffset);
+    progFill.style.width    = ((t / d) * 100) + '%';
+    timeDisp.textContent    = `${fmt(t)} / ${fmt(d)}`;
+});
+
+// Resize con debounce
+let rTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(rTimer);
+    rTimer = setTimeout(resizeCanvas, 130);
+});
+
+// Prevenir scroll accidental con rueda
+document.body.addEventListener('wheel', e => e.preventDefault(), { passive: false });
+
+// ================================================================
+// ARRANQUE
+// ================================================================
+initLyrics();
+resizeCanvas();
+</script>
+</body>
+</html>
